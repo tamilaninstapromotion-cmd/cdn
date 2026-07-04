@@ -1,0 +1,5 @@
+{
+ "password": "$2y$12$hXev1BkLJgYtwq5AFCWpB.4IctwpT6kHZc2AVBst.z7RgMniySMvi",
+ "password_hint": "Default: admin123 (change after login!)",
+ "session_timeout": 3600
+}

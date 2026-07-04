@@ -1,0 +1,114 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Force HTTPS
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    # Remove trailing slash
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)/$ /$1 [L,R=301]
+</IfModule>
+
+<IfModule mod_headers.c>
+    # Security Headers
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "DENY"
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+
+    # Cache control for uploaded assets
+    <FilesMatch "\.(jpg|jpeg|png|webp|pdf)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+</IfModule>
+
+# Disable directory listing
+Options -Indexes
+
+# Disable PHP execution in uploads directory
+<Directory "uploads">
+    <FilesMatch "\.php$">
+        Require all denied
+    </FilesMatch>
+    <FilesMatch "\.(php[3-9]|phtml|exe|dll|sh|bat|pl|py|jsp|asp|aspx|cgi)$">
+        Require all denied
+    </FilesMatch>
+    php_flag engine off
+    RemoveHandler .php .phtml .php3 .php4 .php5
+    RemoveType .php .phtml .php3 .php4 .php5
+</Directory>
+
+# Disable PHP execution in thumbnails directory
+<Directory "thumbnails">
+    <FilesMatch "\.php$">
+        Require all denied
+    </FilesMatch>
+    php_flag engine off
+    RemoveHandler .php .phtml .php3 .php4 .php5
+    RemoveType .php .phtml .php3 .php4 .php5
+</Directory>
+
+# Disable PHP execution in temp directory
+<Directory "temp">
+    <FilesMatch "\.php$">
+        Require all denied
+    </FilesMatch>
+    php_flag engine off
+    RemoveHandler .php .phtml .php3 .php4 .php5
+    RemoveType .php .phtml .php3 .php4 .php5
+</Directory>
+
+# Protect sensitive files
+<FilesMatch "^(\.env|composer\.json|composer\.lock|package\.json|package-lock\.json|README\.md|\.git)$">
+    Require all denied
+</FilesMatch>
+
+# Protect config directory
+<Directory "config">
+    Require all denied
+</Directory>
+
+# Protect logs directory
+<Directory "logs">
+    Require all denied
+</Directory>
+
+# Protect docs directory
+<Directory "docs">
+    Require all denied
+</Directory>
+
+# Protect src directory
+<Directory "src">
+    Require all denied
+</Directory>
+
+# Protect api directory from direct browsing
+<Directory "api">
+    <FilesMatch "^(index\.php|[^/]+\.php)$">
+        Require all denied
+    </FilesMatch>
+</Directory>
+
+# Block common exploit attempts
+<IfModule mod_rewrite.c>
+    RewriteCond %{REQUEST_URI} ^(.*)/\.\./(.*)$
+    RewriteRule ^ - [F,L]
+
+    RewriteCond %{QUERY_STRING} \../ [OR]
+    RewriteCond %{QUERY_STRING} %00
+    RewriteRule .* - [F,L]
+
+    RewriteCond %{REQUEST_METHOD} ^(TRACE|TRACK|PUT|DELETE)
+    RewriteRule .* - [F,L]
+</IfModule>
+
+# Set default charset
+AddDefaultCharset UTF-8
+
+# MIME types
+AddType image/webp .webp
+AddType image/avif .avif
+AddType application/pdf .pdf
